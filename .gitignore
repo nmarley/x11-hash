@@ -1,3 +1,6 @@
 a.out
 a.out.dSYM
 *.o
+debug
+test
+x11sum

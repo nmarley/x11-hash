@@ -2,28 +2,94 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "util.h"
 
-int main(void) {
-    // const char *input = "";
-    const char *input = "The quick brown fox jumps over the lazy dog";
-    // const char *input = "DASH";
-    // const char *input = "Take this kiss upon the brow! And, in parting from you now, Thus much let me avow-- You are not wrong, who deem That my days have been a dream; Yet if hope has flown away In a night, or in a day, In a vision, or in none, Is it therefore the less gone? All that we see or seem Is but a dream within a dream. I stand amid the roar Of a surf-tormented shore, And I hold within my hand Grains of the golden sand-- How few! yet how they creep Through my fingers to the deep, While I weep--while I weep! O God! can I not grasp Them with a tighter clasp? O God! can I not save One from the pitiless wave? Is all that we see or seem But a dream within a dream?";
+void print_usage(const char *prog_name) {
+    fprintf(stderr, "Usage: %s <hex_string>\n", prog_name);
+    fprintf(stderr, "  hex_string: Input data as hexadecimal string (e.g., 48656c6c6f)\n");
+    fprintf(stderr, "\nExample:\n");
+    fprintf(stderr, "  %s 4461736820697320636f6f6c\n", prog_name);
+}
 
-    // hash and display the entire 512-bits
-    int output_size = 64;
-    int hexout_size = output_size + output_size + 1;
+int is_valid_hex(const char *str) {
+    for (size_t i = 0; i < strlen(str); i++) {
+        if (!isxdigit(str[i])) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        print_usage(argv[0]);
+        return 1;
+    }
+
+    const char *hex_input = argv[1];
+    size_t hex_len = strlen(hex_input);
+
+    // Validate hex string
+    if (hex_len == 0) {
+        fprintf(stderr, "Error: Empty hex string\n");
+        print_usage(argv[0]);
+        return 1;
+    }
+
+    if (hex_len % 2 != 0) {
+        fprintf(stderr, "Error: Hex string must have even number of characters\n");
+        return 1;
+    }
+
+    if (!is_valid_hex(hex_input)) {
+        fprintf(stderr, "Error: Invalid hex string (must contain only 0-9, a-f, A-F)\n");
+        return 1;
+    }
+
+    // Convert hex string to lowercase for consistency
+    char *hex_lower = malloc(hex_len + 1);
+    if (!hex_lower) {
+        fprintf(stderr, "Error: Memory allocation failed\n");
+        return 1;
+    }
+    
+    for (size_t i = 0; i < hex_len; i++) {
+        hex_lower[i] = tolower(hex_input[i]);
+    }
+    hex_lower[hex_len] = '\0';
+
+    // Calculate binary input size
+    size_t binary_len = hex_len / 2;
+    char *binary_input = malloc(binary_len);
+    if (!binary_input) {
+        fprintf(stderr, "Error: Memory allocation failed\n");
+        free(hex_lower);
+        return 1;
+    }
+
+    // Convert hex to binary
+    hex_to_binary(binary_input, hex_lower, hex_len);
+
+    // Prepare output buffers
+    int output_size = 64;  // 512 bits = 64 bytes
+    int hexout_size = output_size * 2 + 1;
 
     char output[output_size];
     char hexout[hexout_size];
     hexout[hexout_size - 1] = '\0';
 
-    x11_hash((const char *)input, output, strlen(input));
+    // Compute X11 hash
+    x11_hash((const char *)binary_input, output, binary_len);
     binary_to_hex(hexout, (const char *)output, output_size);
 
-    printf("input: %s\n", input);
-    printf("hexout: %s\n", hexout);
+    // Print result
+    printf("%s\n", hexout);
+
+    // Cleanup
+    free(hex_lower);
+    free(binary_input);
 
     return 0;
 }

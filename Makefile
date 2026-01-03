@@ -5,7 +5,8 @@ OBJS = sha3/blake.o sha3/bmw.o sha3/cubehash.o sha3/echo.o sha3/groestl.o sha3/j
 
 DEBUG_TGT=debug
 TEST_TGT=test
-TARGETS=$(DEBUG_TGT) $(TEST_TGT)
+X11SUM_TGT=x11sum
+TARGETS=$(DEBUG_TGT) $(TEST_TGT) $(X11SUM_TGT)
 
 test: $(OBJS) test.o
 	$(CC) test.o x11.o util.o sha3/*.o -o test
@@ -13,6 +14,9 @@ test: $(OBJS) test.o
 
 debug: $(OBJS) main.o
 	$(CC) main.o x11.o util.o sha3/*.o -o debug
+
+x11sum: $(OBJS) main.o
+	$(CC) main.o x11.o util.o sha3/*.o -o x11sum
 
 clean:
 	rm -fr a.out a.out.dSYM *.o sha3/*.o $(TARGETS)
