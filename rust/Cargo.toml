@@ -1,0 +1,9 @@
+[package]
+name = "x11_hash"
+version = "0.1.0"
+edition = "2024"
+authors = ["Nathan Marley <nathan@glowberrylabs.com>"]
+
+[lib]
+name = "x11_hash"
+crate-type = ["staticlib", "lib"]
