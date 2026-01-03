@@ -1,11 +1,11 @@
-#include "x11.h"
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 #include <unistd.h>
 
 #include "util.h"
+#include "x11.h"
 
 void print_usage(const char *prog_name) {
     fprintf(stderr, "Usage: %s [OPTIONS] [hex_string]\n", prog_name);
@@ -29,7 +29,7 @@ int is_valid_hex(const char *str, size_t len) {
     return 1;
 }
 
-char* read_stdin(size_t *out_len) {
+char *read_stdin(size_t *out_len) {
     size_t capacity = 1024;
     size_t len = 0;
     char *buffer = malloc(capacity);
@@ -105,8 +105,8 @@ int process_hex(const char *hex_input, size_t hex_len, int use_long_output) {
     hex_to_binary(binary_input, hex_lower, hex_len);
 
     // Prepare output buffers
-    int full_output_size = 64;  // 512 bits = 64 bytes
-    int output_size = use_long_output ? full_output_size : 32;  // 256 bits = 32 bytes by default
+    int full_output_size = 64;                                 // 512 bits = 64 bytes
+    int output_size = use_long_output ? full_output_size : 32; // 256 bits = 32 bytes by default
     int hexout_size = output_size * 2 + 1;
 
     char output[full_output_size];
