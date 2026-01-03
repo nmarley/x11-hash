@@ -8,12 +8,16 @@
 #include "util.h"
 
 void print_usage(const char *prog_name) {
-    fprintf(stderr, "Usage: %s [hex_string]\n", prog_name);
+    fprintf(stderr, "Usage: %s [OPTIONS] [hex_string]\n", prog_name);
     fprintf(stderr, "  hex_string: Input data as hexadecimal string (e.g., 48656c6c6f)\n");
     fprintf(stderr, "              If omitted, reads from stdin\n");
+    fprintf(stderr, "\nOptions:\n");
+    fprintf(stderr, "  -l, --long  Output full 512-bit hash (default: 256-bit)\n");
     fprintf(stderr, "\nExamples:\n");
     fprintf(stderr, "  %s 4461736820697320636f6f6c\n", prog_name);
+    fprintf(stderr, "  %s -l 4461736820697320636f6f6c\n", prog_name);
     fprintf(stderr, "  echo -n \"00\" | %s\n", prog_name);
+    fprintf(stderr, "  echo -n \"00\" | %s --long\n", prog_name);
 }
 
 int is_valid_hex(const char *str, size_t len) {
@@ -59,7 +63,7 @@ char* read_stdin(size_t *out_len) {
     return buffer;
 }
 
-int process_hex(const char *hex_input, size_t hex_len) {
+int process_hex(const char *hex_input, size_t hex_len, int use_long_output) {
     // Validate hex string
     if (hex_len == 0) {
         fprintf(stderr, "Error: Empty hex string\n");
@@ -101,10 +105,11 @@ int process_hex(const char *hex_input, size_t hex_len) {
     hex_to_binary(binary_input, hex_lower, hex_len);
 
     // Prepare output buffers
-    int output_size = 64;  // 512 bits = 64 bytes
+    int full_output_size = 64;  // 512 bits = 64 bytes
+    int output_size = use_long_output ? full_output_size : 32;  // 256 bits = 32 bytes by default
     int hexout_size = output_size * 2 + 1;
 
-    char output[output_size];
+    char output[full_output_size];
     char hexout[hexout_size];
     hexout[hexout_size - 1] = '\0';
 
@@ -123,15 +128,24 @@ int process_hex(const char *hex_input, size_t hex_len) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc > 2) {
+    int use_long_output = 0;
+    int arg_idx = 1;
+
+    // Parse options
+    if (argc > 1 && (strcmp(argv[1], "-l") == 0 || strcmp(argv[1], "--long") == 0)) {
+        use_long_output = 1;
+        arg_idx = 2;
+    }
+
+    if (argc > 3 || (argc == 3 && !use_long_output)) {
         print_usage(argv[0]);
         return 1;
     }
 
-    if (argc == 2) {
+    if (argc >= 2 && arg_idx < argc) {
         // Process command-line argument
-        const char *hex_input = argv[1];
-        return process_hex(hex_input, strlen(hex_input));
+        const char *hex_input = argv[arg_idx];
+        return process_hex(hex_input, strlen(hex_input), use_long_output);
     } else {
         // Read from stdin
         size_t hex_len;
@@ -142,7 +156,7 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        int result = process_hex(hex_input, hex_len);
+        int result = process_hex(hex_input, hex_len, use_long_output);
         free(hex_input);
         return result;
     }
