@@ -7,3 +7,6 @@ authors = ["Nathan Marley <nathan@glowberrylabs.com>"]
 [lib]
 name = "x11_hash"
 crate-type = ["staticlib", "lib"]
+
+[build-dependencies]
+cc = "1.0"
